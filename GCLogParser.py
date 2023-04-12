@@ -4,8 +4,9 @@ import matplotlib.patches as mpatches
 import sys
 
 class GCLogParser:
-    pauseYoung_pattern = r"^\[(\d+\.\d+)s\]\[info\]\[gc\] GC\((\d+)\) Pause Young \(([^)]+)\) \(([^)]+)\) (\d+)M->(\d+)M\((\d+)M\) (\d+\.\d+)ms$"
-    concurrentCycle_patttern = r"^\[(\d+\.\d+)s\]\[info\]\[gc\] GC\((\d+)\) (Concurrent Cycle|Pause Remark|Pause Cleanup)( (\d+)M->(\d+)M\((\d+)M\))?( (\d+\.\d+)ms)?$"
+    pauseYoung_pattern = r"^\[(\d+\.\d+)s\]\[info\s*\]\[gc\s*\] GC\((\d+)\) Pause Young \(([^)]+)\) \(([^)]+)\) (\d+)M->(\d+)M\((\d+)M\) (\d+\.\d+)ms$"
+    concurrentCycle_patttern = r"^\[(\d+\.\d+)s\]\[info\s*\]\[gc\s*\] GC\((\d+)\) (Concurrent Cycle|Pause Remark|Pause Cleanup)( (\d+)M->(\d+)M\((\d+)M\))?( (\d+\.\d+)ms)?$"
+    heapConsumption_pattern = r"^\[(\d+\.\d+)s\]\[info\s*\]\[gc,heap\s*\] GC\((\d+)\) (Eden regions|Survivor regions|Old regions|Humongous regions): (\d+)->(\d+)(\((\d+)\))?$"
 
     def __init__(self, file_path):
         with open(file_path, 'r') as file:
@@ -34,7 +35,7 @@ class GCLogParser:
                 duration = float(match.group(8))
 
                 a = pauseYoung(time_elapsed, gc_cycle, gc_type, pause_reason, before, after, total, duration)
-                self.cycles[int(gc_cycle)] = a
+                self.cycles[gc_cycle] = a
 
     def parse_conccurentCycle(self):
         i = None
@@ -46,7 +47,7 @@ class GCLogParser:
             if match:
                 # Extract the captured groups from the match object
                 time_elapsed = float(match.group(1))
-                gc_cycle = match.group(2)
+                gc_cycle = int(match.group(2))
                 event = match.group(3)
                 heap_memory = match.group(4)
                 before = match.group(5)
@@ -59,7 +60,7 @@ class GCLogParser:
                         concurrentCycleTmp.time_elapsed_end = time_elapsed
                         concurrentCycleTmp.duration = duration
                         a = concurrentCycles(concurrentCycleTmp, PauseRemarkTmp, PauseCleanupTmp)
-                        self.cycles[int(gc_cycle)] = a
+                        self.cycles[gc_cycle] = a
                     else:
                         concurrentCycleTmp = concurrentCycle(time_elapsed, 0.0, gc_cycle, event, duration)
                         i = gc_cycle
@@ -84,7 +85,7 @@ class GCLogParser:
         total = 0
         for cycle in self.cycles:
             total += cycle.duration
-        return total
+        return float("{:.3f}".format(total))
     
     def avgTime(self):
         # in ms
@@ -96,7 +97,7 @@ class GCLogParser:
     
     def pauseTimeAnalysis(self):
         pause_times = [cycle.duration for cycle in self.cycles]
-        total_pause_time = sum(pause_times)
+        total_pause_time = self.totalTime()
         avg_pause_time = total_pause_time / len(pause_times)
         min_pause_time = min(pause_times)
         max_pause_time = max(pause_times)
@@ -202,7 +203,7 @@ if __name__ == "__main__":
     # argument = input("Enter the path of the log file: ")
 
     a = GCLogParser("C:\\spark-app\log\jj\executor-gc.s2.log")
-    # print(a.pauseTimeAnalysis())
+    print(a.totalTime())
     # print(a.cycle(55).duration)
     
-    a.timeline()
+    # a.timeline()
