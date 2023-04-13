@@ -11,6 +11,76 @@ dragDrop.addEventListener("dragleave", (e) => {
     dragDrop.classList.remove("drag-over");
 });
 
+const createCard = (data) => {
+    console.log(data);
+    parentCard = document.createElement("div");
+    parentCard.classList.add("card");
+
+    cardBody = document.createElement("div");
+    cardBody.classList.add("card-body");
+    parentCard.appendChild(cardBody);
+
+    cardTitle = document.createElement("h3");
+    cardTitle.classList.add("card-title");
+    cardTitle.appendChild(document.createTextNode("File: " + data["filename"].split(".")[0]));
+    cardBody.appendChild(cardTitle);
+
+    cardText = document.createElement("p");
+    cardText.classList.add("card-text");
+    cardText.appendChild(
+        document.createTextNode(
+            "Total Time            : " + data["totalTime"]));
+    cardBody.appendChild(cardText);
+
+    cardText = document.createElement("p");
+    cardText.classList.add("card-text");
+    cardText.appendChild(
+        document.createTextNode(
+            "Concurrent Cycle Time : " + data["totalTimeConcurrentCycle"]));
+    cardBody.appendChild(cardText);
+
+    cardText = document.createElement("p");
+    cardText.classList.add("card-text");
+    cardText.appendChild(
+        document.createTextNode(
+            "Pause Young Time      : " + data["totalTimePauseYoung"]));
+    cardBody.appendChild(cardText);
+
+    cardText = document.createElement("p");
+    cardText.classList.add("card-text");
+    cardText.appendChild(
+        document.createTextNode(
+            "Average Cycle Time    : " + data["avgTime"]));
+    cardBody.appendChild(cardText);
+
+    cardText = document.createElement("p");
+    cardText.classList.add("card-text");
+    cardText.appendChild(
+        document.createTextNode(
+            "Minimum Cycle Time    : " + data["minPauseTime"]));
+    cardBody.appendChild(cardText);
+
+    cardText = document.createElement("p");
+    cardText.classList.add("card-text");
+    cardText.appendChild(
+        document.createTextNode(
+            "Maximum Cycle Time    : " + data["maxPauseTime"]));
+    cardBody.appendChild(cardText);
+    
+    cardImage = document.createElement("img");
+    cardImage.classList.add("card-img");
+    cardImage.setAttribute("src", data["stackBarChart"]);
+    parentCard.appendChild(cardImage);
+
+    cardImage = document.createElement("img");
+    cardImage.classList.add("card-img");
+    cardImage.setAttribute("src", data["timeline"]);
+    parentCard.appendChild(cardImage);
+
+    document.body.appendChild(parentCard);
+};
+
+
 dragDrop.addEventListener("drop", (e) => {
     e.preventDefault();
     dragDrop.classList.remove("drag-over");
@@ -25,15 +95,14 @@ dragDrop.addEventListener("drop", (e) => {
         method: "POST",
         body: formData,
     })
-        .then((response) => {
+        .then(async (response) => {
             if (!response.ok) {
                 throw new Error(response.statusText);
             }
-            return response.json();
+            return await response.json();
         })
         .then((data) => {
-            console.log(data);
-            console.log("File uploaded successfully:", data);
+            createCard(data);
         })
         .catch((error) => {
             console.error("Error uploading file:", error);
@@ -52,15 +121,14 @@ fileInput.addEventListener("change", () => {
         method: "POST",
         body: formData,
     })
-        .then((response) => {
+        .then(async (response) => {
             if (!response.ok) {
                 throw new Error(response.statusText);
             }
-            return response.json();
+            return await response.json();
         })
         .then((data) => {
-            console.log(data);
-            console.log("File uploaded successfully:", data);
+            createCard(data);
         })
         .catch((error) => {
             console.error("Error uploading file:", error);

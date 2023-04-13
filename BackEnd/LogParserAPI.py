@@ -1,5 +1,5 @@
 from Modules.GCLogParser import *
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from os.path import join, dirname
 
@@ -9,10 +9,12 @@ SAVE_FLDR = 'SavedFiles'
 app = Flask(__name__)
 cors = CORS(app) # allow only requests from http://localhost:3000
 app.config["CORS_ORIGINS"] = ["http://localhost:5000"]
+app.config['UPLOAD_FOLDER'] = join(PATH, SAVE_FLDR)
 
 # Define a simple endpoint to test the API
 @app.route('/')
 def hello_world():
+    app.logger.debug('Hello World!')
     return 'Flask API is up and running!'
 
 # Define an endpoint to upload a .log file
@@ -31,7 +33,28 @@ def upload_file():
     filepath = join(PATH, SAVE_FLDR, file.filename)
     file.save(filepath)
     parser = GCLogParser(filepath)
-    return jsonify({'message': 'File uploaded successfully', 'filename': file.filename, 'data': parser.totalTimeConcurrentCycle()}), 200
+    parser.stackBarChart(show=False, file_path=filepath.split('.log')[0])
+    parser.timeline(show=False, file_path=filepath.split('.log')[0])
+    payload = {
+        'filename': file.filename,
+        'totalTime': parser.totalTime(),
+        'totalTimeConcurrentCycle': parser.totalTimeConcurrentCycle(),
+        'totalTimePauseYoung': parser.totalTimePauseYoung(),
+        'avgTime': parser.avgTime(),
+        'minPauseTime': parser.minPauseTime(),
+        'maxPauseTime': parser.maxPauseTime(),
+        'stackBarChart': 'http://localhost:5000/static/' + file.filename.split('.log')[0] + '-stackBarChart.png',
+        'timeline': 'http://localhost:5000/static/' + file.filename.split('.log')[0] + '-timeline.png'
+    }
+    return jsonify(payload), 200
+
+@app.route('/static/<filename>')
+def send_static(filename):
+    app.logger.debug('Sending file: ' + filename)
+    try:
+        return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+    except FileNotFoundError:
+        return jsonify({'error': 'File not found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
