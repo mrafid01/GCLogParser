@@ -1,3 +1,5 @@
+const API_URL = "http://localhost:5000/upload";
+
 const dragDrop = document.querySelector(".drag-drop");
 const fileInput = document.querySelector("#file-input");
 
@@ -90,7 +92,7 @@ dragDrop.addEventListener("drop", (e) => {
     }
     const formData = new FormData();
     formData.append("file", file);
-    fetch("http://localhost:5000/upload", {
+    fetch(API_URL, {
         method: "POST",
         body: formData,
     })
@@ -116,7 +118,7 @@ fileInput.addEventListener("change", () => {
     }
     const formData = new FormData();
     formData.append("file", file);
-    fetch("http://localhost:5000/upload", {
+    fetch(API_URL, {
         method: "POST",
         body: formData,
     })

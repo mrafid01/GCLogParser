@@ -3,7 +3,10 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from os import mkdir
 from os.path import join, dirname, exists
+from dotenv import dotenv_values
 
+env = dotenv_values(".env")
+API_URL = env.get('API_URL') or 'http://localhost:5000'
 PATH = dirname(__file__)
 SAVE_FLDR = 'SavedFiles'
 
@@ -42,8 +45,8 @@ def upload_file():
         'avgTime': parser.avgTime(),
         'minPauseTime': parser.minPauseTime(),
         'maxPauseTime': parser.maxPauseTime(),
-        'stackBarChart': 'http://localhost:5000/static/' + file.filename.split('.log')[0] + '-stackBarChart.png',
-        'timeline': 'http://localhost:5000/static/' + file.filename.split('.log')[0] + '-timeline.png'
+        'stackBarChart': API_URL + "/static/" + file.filename.split('.log')[0] + '-stackBarChart.png',
+        'timeline': API_URL + "/static/" + file.filename.split('.log')[0] + '-timeline.png'
     }
     return jsonify(payload), 200
 
@@ -55,7 +58,7 @@ def send_static(filename):
         return jsonify({'error': 'File not found'}), 404
 
 if __name__ == '__main__':
-    app.config["CORS_ORIGINS"] = ["http://localhost:5000"]
+    app.config["CORS_ORIGINS"] = [env.get('APP_URL') or "https://gc.nathancs.dev"]
     app.config['UPLOAD_FOLDER'] = join(PATH, SAVE_FLDR)
     if not exists(app.config['UPLOAD_FOLDER']):
         mkdir(app.config['UPLOAD_FOLDER'])
