@@ -1,0 +1,40 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.drag-drop {
+    border: 2px dashed gainsboro;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 10em;
+    text-align: center;
+}
+
+.drag-drop-text {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.drag-over {
+    border-color: #000;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    background-color: cornflowerblue;
+    display: flex;
+    justify-content: center; /* center horizontally */
+    align-items: center; /* center vertically */
+}
+
+.footer-text {
+    text-align: center;
+    font-size: 18px;
+    font-weight: normal;
+    color: #fff;
+}

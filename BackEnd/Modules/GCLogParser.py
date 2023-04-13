@@ -12,9 +12,9 @@ class GCLogParser:
         with open(file_path, 'r') as file:
             self.content = file.read()
             self.lines = self.content.split("\n")
-        self.cycles = [0] * len(self.lines)
+        self.cycles= {}
         self.__build()
-        self.cycles = list(filter(lambda x: x != 0, self.cycles))
+        self.cycles = list(dict(sorted(self.cycles.items())).values())
 
     def __build(self):
         self.parse_pauseYoung()
@@ -56,7 +56,7 @@ class GCLogParser:
                 duration = match.group(9)
 
                 if event == "Concurrent Cycle":
-                    if i == gc_cycle:
+                    if i == gc_cycle and concurrentCycleTmp is not None:
                         concurrentCycleTmp.time_elapsed_end = time_elapsed
                         concurrentCycleTmp.duration = duration
                         a = concurrentCycles(concurrentCycleTmp, PauseRemarkTmp, PauseCleanupTmp)
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     # argument = sys.argv[1]
     # argument = input("Enter the path of the log file: ")
 
-    a = GCLogParser("C:\\spark-app\log\jj\executor-gc.s2.log")
+    a = GCLogParser("executor-gc.log")
     print(a.totalTimeConcurrentCycle())
     print(a.totalTimePauseYoung())
     # print(a.cycle(55).duration)
