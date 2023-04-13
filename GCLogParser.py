@@ -87,6 +87,22 @@ class GCLogParser:
             total += cycle.duration
         return float("{:.3f}".format(total))
     
+    def totalTimeConcurrentCycle(self):
+        # in ms
+        total = 0
+        for cycle in self.cycles:
+            if isinstance(cycle, concurrentCycles):
+                total += cycle.duration
+        return float("{:.3f}".format(total))
+    
+    def totalTimePauseYoung(self):
+        # in ms
+        total = 0
+        for cycle in self.cycles:
+            if isinstance(cycle, pauseYoung):
+                total += cycle.duration
+        return float("{:.3f}".format(total))
+    
     def avgTime(self):
         # in ms
         return self.totalTime() / len(self.cycles)
@@ -196,6 +212,7 @@ class concurrentCycles:
         self.PauseCleanup = pauseRemarkCleanup2
         self.duration = float(concurrentCycle.duration)
         self.time_elapsed = float(concurrentCycle.time_elapsed_end)
+        self.gc_cycle = concurrentCycle.gc_cycle
 
 if __name__ == "__main__":
     # Get the argument
@@ -203,7 +220,8 @@ if __name__ == "__main__":
     # argument = input("Enter the path of the log file: ")
 
     a = GCLogParser("C:\\spark-app\log\jj\executor-gc.s2.log")
-    print(a.totalTime())
+    print(a.totalTimeConcurrentCycle())
+    print(a.totalTimePauseYoung())
     # print(a.cycle(55).duration)
     
     # a.timeline()
