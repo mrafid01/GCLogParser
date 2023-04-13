@@ -12,7 +12,6 @@ dragDrop.addEventListener("dragleave", (e) => {
 });
 
 const createCard = (data) => {
-    console.log(data);
     parentCard = document.createElement("div");
     parentCard.classList.add("card");
 

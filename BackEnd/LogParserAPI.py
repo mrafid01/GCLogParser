@@ -1,15 +1,14 @@
 from Modules.GCLogParser import *
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from os.path import join, dirname
+from os import mkdir
+from os.path import join, dirname, exists
 
 PATH = dirname(__file__)
 SAVE_FLDR = 'SavedFiles'
 
 app = Flask(__name__)
 cors = CORS(app) # allow only requests from http://localhost:3000
-app.config["CORS_ORIGINS"] = ["http://localhost:5000"]
-app.config['UPLOAD_FOLDER'] = join(PATH, SAVE_FLDR)
 
 # Define a simple endpoint to test the API
 @app.route('/')
@@ -50,11 +49,14 @@ def upload_file():
 
 @app.route('/static/<filename>')
 def send_static(filename):
-    app.logger.debug('Sending file: ' + filename)
     try:
         return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
     except FileNotFoundError:
         return jsonify({'error': 'File not found'}), 404
 
 if __name__ == '__main__':
+    app.config["CORS_ORIGINS"] = ["http://localhost:5000"]
+    app.config['UPLOAD_FOLDER'] = join(PATH, SAVE_FLDR)
+    if not exists(app.config['UPLOAD_FOLDER']):
+        mkdir(app.config['UPLOAD_FOLDER'])
     app.run(debug=True)
