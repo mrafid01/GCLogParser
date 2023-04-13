@@ -1,7 +1,8 @@
 import re
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import sys
 
 class GCLogParser:
     pauseYoung_pattern = r"^\[(\d+\.\d+)s\]\[info\s*\]\[gc\s*\] GC\((\d+)\) Pause Young \(([^)]+)\) \(([^)]+)\) (\d+)M->(\d+)M\((\d+)M\) (\d+\.\d+)ms$"
@@ -12,9 +13,9 @@ class GCLogParser:
         with open(file_path, 'r') as file:
             self.content = file.read()
             self.lines = self.content.split("\n")
-        self.cycles = [0] * len(self.lines)
+        self.cycles= {}
         self.__build()
-        self.cycles = list(filter(lambda x: x != 0, self.cycles))
+        self.cycles = list(dict(sorted(self.cycles.items())).values())
 
     def __build(self):
         self.parse_pauseYoung()
@@ -56,7 +57,7 @@ class GCLogParser:
                 duration = match.group(9)
 
                 if event == "Concurrent Cycle":
-                    if i == gc_cycle:
+                    if i == gc_cycle and concurrentCycleTmp is not None:
                         concurrentCycleTmp.time_elapsed_end = time_elapsed
                         concurrentCycleTmp.duration = duration
                         a = concurrentCycles(concurrentCycleTmp, PauseRemarkTmp, PauseCleanupTmp)
@@ -105,12 +106,20 @@ class GCLogParser:
     
     def avgTime(self):
         # in ms
-        return self.totalTime() / len(self.cycles)
+        return float("{:.3f}".format(self.totalTime() / len(self.cycles)))
     
     def toString(self):
         # print the content of the log file
         return self.content
     
+    def minPauseTime(self):
+        pause_times = [cycle.duration for cycle in self.cycles]
+        return min(pause_times)
+
+    def maxPauseTime(self):
+        pause_times = [cycle.duration for cycle in self.cycles]
+        return max(pause_times)
+
     def pauseTimeAnalysis(self):
         pause_times = [cycle.duration for cycle in self.cycles]
         total_pause_time = self.totalTime()
@@ -129,7 +138,7 @@ class GCLogParser:
         file.write(string)
         file.close()
 
-    def stackBarChart(self):
+    def stackBarChart(self, show=True, file_path=None):
         runtimes = [i.duration for i in self.cycles]
 
         total_runtime = sum(runtimes)
@@ -145,10 +154,17 @@ class GCLogParser:
 
         for i, percentage in enumerate(percentages):
             plt.text(i, percentage, f'{percentage}%', ha='center')
+        
+        if show:
+            plt.show()
+        elif file_path is None:
+            plt.savefig('stackBarChart.png')
+        else:
+            plt.savefig(file_path + '-stackBarChart.png')
 
-        plt.show()
+        plt.clf()
 
-    def timeline(self):
+    def timeline(self, show=True, file_path=None):
         start_time = 0
         end_time = self.cycles[-1].time_elapsed + self.mstos(self.cycles[-1].duration)
 
@@ -168,7 +184,14 @@ class GCLogParser:
             gc_patch = mpatches.Rectangle((gc_thread[0], i*rect_height), gc_thread[1]-gc_thread[0], rect_height, color='blue')
             ax.add_patch(gc_patch)
 
-        plt.show()
+        if show:
+            plt.show()
+        elif file_path is None:
+            plt.savefig('timeline.png')
+        else:
+            plt.savefig(file_path + '-timeline.png')
+
+        plt.clf()
 
     def test(self):
         pass
@@ -219,7 +242,7 @@ if __name__ == "__main__":
     # argument = sys.argv[1]
     # argument = input("Enter the path of the log file: ")
 
-    a = GCLogParser("C:\\spark-app\log\jj\executor-gc.s2.log")
+    a = GCLogParser("./Backend/SavedFiles/executor-gc.log")
     print(a.totalTimeConcurrentCycle())
     print(a.totalTimePauseYoung())
     # print(a.cycle(55).duration)
