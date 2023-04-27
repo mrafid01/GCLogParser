@@ -185,6 +185,11 @@ class GCLogParser:
         for cycle in self.cycles:
             if isinstance(cycle, (pauseFull, pauseYoung)):
                 heap_usage.append(cycle.after)
+            if isinstance(cycle, concurrentCycles):
+                if cycle.pauseRemark.after != None:
+                    heap_usage.append(int(cycle.pauseRemark.after))
+                if cycle.pauseCleanup.after != None:
+                    heap_usage.append(int(cycle.pauseCleanup.after))
         return heap_usage
     
     def maxHeapUsage(self):
@@ -285,14 +290,14 @@ class concurrentCycle:
         self.duration = duration
 
 class pauseRemarkCleanup:
-    def __init__(self, time_elapsed=0, gc_cycle=0, event='', heap_memory='', before=0, after=0, total=0, duration=0):
+    def __init__(self, time_elapsed=0, gc_cycle=0, event='', heap_memory='', before=0, after=None, total=0, duration=0):
         self.time_elapsed = time_elapsed
         self.gc_cycle = gc_cycle
         self.event = event
         self.heap_memory = heap_memory
         self.before = before
         self.after = after
-        self.diff = int(before) - int(after)
+        self.diff = int(before) - int(after if after!=None else 0)
         self.total = total
         self.duration = float(duration)
 
@@ -322,11 +327,7 @@ if __name__ == "__main__":
     # argument = input("Enter the path of the log file: ")
 
     a = GCLogParser("C:\\spark-app\log\jj\executor-gc.WordCountCached.enwiki-latest-pages-articles.xml.log")
-    print(a.totalTimeConcurrentCycle())
-    print(a.totalTimePauseTime())
-    print(a.totalTimePauseYoung())
-    print(a.totalTimePauseFull())
-    print(a.totalTimeOtherPause())
+    print(a.heapUsageAnalysis())
     # print(a.cycle(55).duration)
     
     # a.timeline()
